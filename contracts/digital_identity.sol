@@ -1,11 +1,10 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity >=0.4.0 <0.6.0;
 
 /**
- * The digitalIdentity contract handles a digital identity of a person
+ * The digital_identity contract handles a digital identity of a person
  */
-contract digitalIdentity {
+contract digital_identity {
 
-	//Struct for user
 	struct user {
 		string name;
 		uint age;
@@ -37,8 +36,16 @@ contract digitalIdentity {
 
 	//To Add a user to the system
 	function addUser (string memory _name, uint _aadhar_number) public returns(address)  {
-		address tempAddress=getUniqueId(_aadhar_number);
-		var user1=userData[tempAddress];
+		address tempAddress=getUniqueAddress(_aadhar_number);
+		for(uint i=0;i<userAccounts.length;i++)
+		{
+			if(userAccounts[i]==tempAddress)
+			{
+				//Add event which says that there is already an existing user
+				revert();
+			}
+		}
+		user memory user1=userData[tempAddress];
 		user1.name=_name;
 		userAccounts.push(tempAddress);	
 		return tempAddress;	
@@ -46,47 +53,68 @@ contract digitalIdentity {
 
 	//To update the age field of the user's details
 	function updateUserAge (address _addr,uint _age) public {
-		require (userAccounts[uint(_addr)].exists,"User does not exist");
-		userData[_addr].age=_age;
+		for(uint i=0;i<userAccounts.length;i++)
+		{
+			if(userAccounts[i]==_addr)
+			{
+				userData[_addr].age=_age;
+				break;
+			}
+		}
 	}
 
 	//To update the PAN field of the user's details
 	function updateUserPAN (address _addr,uint _PAN) public {
-		require (userAccounts[uint(_addr)].exists,"User does not exist");
-		userData[_addr].PAN=_PAN;
+		for(uint i=0;i<userAccounts.length;i++)
+		{
+			if(userAccounts[i]==_addr)
+			{
+				userData[_addr].PAN=_PAN;
+				break;
+			}
+		}
 	}
 
 	//To update the salary field of the user's details
 	function updateUserSalary (address _addr,uint _salary) public {
-		require (userAccounts[uint(_addr)].exists,"User does not exist");
-		userData[_addr].salary=_salary;
+		for(uint i=0;i<userAccounts.length;i++)
+		{
+			if(userAccounts[i]==_addr)
+			{
+			userData[_addr].salary=_salary;
+				break;
+			}
+		}
 	}
 	
-	// //To view your own data
-	// function viewOwnData () public returns(user)  {
-	// 	user memory tempUser = userData[msg.sender];
-	// 	return tempUser;
-	// }
+	//To view your own data
+	function viewOwnData () public view returns(string memory,uint,uint,uint,uint,address[] memory)  {
+		user memory tempUser = userData[msg.sender];
+		return (tempUser.name,tempUser.age,tempUser.aadhar_number,tempUser.PAN,tempUser.salary,tempUser.permittedToView);
+	}
 
 	//To give permission to another person to view your details
 	function permitToView (address _addr) public{
 		userData[msg.sender].permittedToView.push(_addr);
 	}
 
-	// //To allow someone to view your data, provided you have given that person permission to view your data
-	// function viewOthersData(address _addrWhosDataToBeSeen) public returns(user) {
-	// 	require (userData[_addrWhosDataToBeSeen].permittedToView[msg.sender].exists,"You do not have permission to access this data");
-	// 	return userData[_addrWhosDataToBeSeen];
-	// }
+	//To allow someone to view your data, provided you have given that person permission to view your data
+	function viewOthersData(address _addrWhosDataToBeSeen) public view returns(string memory,uint,uint,uint,uint) {
+		for(uint i=0;i<userData[_addrWhosDataToBeSeen].permittedToView.length;i++)
+		{
+			if(userData[_addrWhosDataToBeSeen].permittedToView[i]==msg.sender)
+			{
+				user memory tempUser = userData[_addrWhosDataToBeSeen];
+				return (tempUser.name,tempUser.age,tempUser.aadhar_number,tempUser.PAN,tempUser.salary);
+			}
+		}
+		//Send event that says the user is not allowed to view this persons data
+		revert();
+	}
 
 	//Function to generate an address to every new user registered using hashing
-	function getUniqueId(uint seed) internal view returns (address) {
-        bytes20 b = bytes20(keccak256(seed, now));
-        uint addr = 0;
-        for (uint index = b.length-1; index+1 > 0; index--) {
-            addr += uint(b[index]) * ( 16 ** ((b.length - index - 1) * 2));
-        }
-        return address(addr);
+	function getUniqueAddress(uint seed) internal pure returns (address) {
+        return address(uint160(uint256(keccak256(abi.encode(seed)))));
     }
 }
 

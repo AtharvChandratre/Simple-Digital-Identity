@@ -1,6 +1,6 @@
-var digital_Identity = artifacts.require("./digital_Identity.sol");
+var Coin = artifacts.require("./digital_identity.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(digital_Identity);
+  deployer.deploy(Coin);
 };
 
