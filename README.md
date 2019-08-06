@@ -1,1 +1,1 @@
-# Simple-Digital-Identity
+# Simple Digital Identity
