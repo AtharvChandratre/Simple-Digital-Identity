@@ -1,1 +1,1 @@
-# Simple Digital Identity
+# Digital Identity Management Using IPFS
